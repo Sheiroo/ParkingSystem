@@ -6,140 +6,145 @@ import java.sql.Date;
 import java.sql.DriverManager;
 
 public class ParkingSystem {
-
-    public static long Cost(long millis){
-        long h=0,m=0,s=0; 
-        if(millis>=360000)
+   
+    public static long calculate_TimeSpent_inParking(long the_milliseconds_difference_between_entering_and_exiting){
+        long hours_spent=0,minutes_spent=0,seconds_spent=0; 
+        if(the_milliseconds_difference_between_entering_and_exiting>=360000)
         {
-            h=millis/3600000;
-            if(millis-3600000>60000)
+            hours_spent=the_milliseconds_difference_between_entering_and_exiting/3600000;
+            if(the_milliseconds_difference_between_entering_and_exiting-3600000>60000)
             {
-                m=(millis-(3600000*h))/60000;
-                s=(millis-((3600000*h)+(m*60000)))/1000;
+                minutes_spent=(the_milliseconds_difference_between_entering_and_exiting-(3600000*hours_spent))/60000;
+                seconds_spent=(the_milliseconds_difference_between_entering_and_exiting-((3600000*hours_spent)+(minutes_spent*60000)))/1000;
             }
             else
             {
-                s=(millis-(3600000*h))/1000;
+                seconds_spent=(the_milliseconds_difference_between_entering_and_exiting-(3600000*hours_spent))/1000;
             }
         }
         else
         {
-            if(millis>60000)
+            if(the_milliseconds_difference_between_entering_and_exiting>60000)
             {
-                m=millis/60000;
-                s=(millis-60000)/1000;
+                minutes_spent=the_milliseconds_difference_between_entering_and_exiting/60000;
+                seconds_spent=(the_milliseconds_difference_between_entering_and_exiting-60000)/1000;
             }
             else
             {
-                s=millis/1000;
+                seconds_spent=the_milliseconds_difference_between_entering_and_exiting/1000;
             }
         }
-        if(m>1||s>1){
-            h+=1;
+        if(minutes_spent>1||seconds_spent>1){
+            hours_spent+=1;
         }
-        long sum=h*15;
-        return sum;
+        return hours_spent;
     }
+    public static long calculateExitCost(long the_milliseconds_difference_between_entering_and_exiting){
+        
+        long exit_cost=calculate_TimeSpent_inParking(the_milliseconds_difference_between_entering_and_exiting)*15;
+        return exit_cost;
+        
+    }       
     
     public static void main(String[] args) {
-        Connection ConObj=null;
+        Connection Connetion_Object;
         
-        Statement StaObj1=null;
-        Statement StaObj2=null;
+        Statement Statement_for_admin;
+        Statement Statement_for_customer;
         
-        ResultSet ResObj1=null;
-        ResultSet ResObj2=null;
+        ResultSet Resultset_for_admin;
+        ResultSet Resultset_for_customer;
         
-        String query1="SELECT * FROM admin";
-        String query2="SELECT * FROM customer";
+        String admin_query="SELECT * FROM admin";
+        String customer_query="SELECT * FROM customer";
         
         try{
-            ConObj=DriverManager.getConnection("jdbc:mysql://localhost:3306/parking?zeroDateTimeBehavior=CONVERT_TO_NULL","root","root1234");
+            Connetion_Object=DriverManager.getConnection("jdbc:mysql://localhost:3306/parking?zeroDateTimeBehavior=CONVERT_TO_NULL","root","root1234");
             
-            StaObj1=ConObj.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
-            StaObj2=ConObj.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            Statement_for_admin=Connetion_Object.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            Statement_for_customer=Connetion_Object.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
             
-            ResObj1=StaObj1.executeQuery(query1);
-            ResObj2=StaObj2.executeQuery(query2);
+            Resultset_for_admin=Statement_for_admin.executeQuery(admin_query);
+            Resultset_for_customer=Statement_for_customer.executeQuery(customer_query);
             
-            int size=30;
-            int size2=10;
+            int num_of_tickets=30;
+            int num_of_admins=10;
             Scanner input=new Scanner(System.in);
             
-            customer[] tickets = new customer[size];
-            for (int y = 0; y < size; y++) {
-                 tickets[y] = new customer();
+            customer[] tickets = new customer[num_of_tickets];
+            for (int index_of_customerArray = 0; index_of_customerArray < num_of_tickets; index_of_customerArray++) {
+                 tickets[index_of_customerArray] = new customer();
             }
             
-            admin[] admins=new admin[size2];
-            for (int y = 0; y < 10; y++) {
-                 admins[y] = new admin();
+            admin[] admins=new admin[num_of_admins];
+            for (int index_of_adminArray = 0; index_of_adminArray < 10; index_of_adminArray++) {
+                 admins[index_of_adminArray] = new admin();
             }
             
-            int e=0;
-            int id=0;
-            String PlateNum="";
-            int NumSpot = 0;
-            long phone;
-            long millis;
-            Date transactionDate;
+            int index_of_adminsArray=0;
+            int id_of_ticket=0;
+            String plate_number_of_car="";
+            int spot_number__in_parking = 0;
+            long phone_of_ticketOwner;
+            long millisecond_when_enter;
+            Date date_of_entry;
             
-            String choice;
+            String choiceOfContinuityOfProgram;
 
-            while(ResObj2.next()){
+            while(Resultset_for_customer.next()){
                 
-                if(ResObj2.getBoolean("State")==false){
+                if(Resultset_for_customer.getBoolean("State")==false){
                     
-                    id=ResObj2.getInt(1);
-                    PlateNum=ResObj2.getString(2);
-                    NumSpot=ResObj2.getInt(3);
-                    transactionDate=ResObj2.getDate(4);
-                    phone=ResObj2.getLong(9);
-                    millis=ResObj2.getLong(5);
+                    id_of_ticket=Resultset_for_customer.getInt(1);
+                    plate_number_of_car=Resultset_for_customer.getString(2);
+                    spot_number__in_parking=Resultset_for_customer.getInt(3);
+                    date_of_entry=Resultset_for_customer.getDate(4);
+                    phone_of_ticketOwner=Resultset_for_customer.getLong(9);
+                    millisecond_when_enter=Resultset_for_customer.getLong(5);
                     
-                    tickets[NumSpot-1]=new customer(id,PlateNum, NumSpot,phone,transactionDate);
-                    tickets[NumSpot-1].setMillis(millis);
+                    tickets[spot_number__in_parking-1]=new customer(id_of_ticket,plate_number_of_car, spot_number__in_parking,phone_of_ticketOwner,date_of_entry);
+                    tickets[spot_number__in_parking-1].setMillisecond_when_enter(millisecond_when_enter);
                 }
                 else {
-                   id=ResObj2.getInt(1); 
+                   id_of_ticket=Resultset_for_customer.getInt(1); 
                 }
                         
             }
-            ResObj2.beforeFirst();
+            Resultset_for_customer.beforeFirst();
             
             
-            String name="";
-            String pass="";
+            String adminName="";
+            String adminPassword="";
             
-            while(ResObj1.next()){
-                name=ResObj1.getString(1);
-                pass=ResObj1.getString(2);
-                if(admins[e].getPass()==null){
-                    admins[e].setName(name);
-                    admins[e].setPass(pass);
+            while(Resultset_for_admin.next()){
+                adminName=Resultset_for_admin.getString(1);
+                adminPassword=Resultset_for_admin.getString(2);
+                if(admins[index_of_adminsArray].getAdminPassword()==null){
+                    admins[index_of_adminsArray].setAdminName(adminName);
+                    admins[index_of_adminsArray].setAdminPassword(adminPassword);
                 }
-                e++;
+                index_of_adminsArray++;
             }
-            ResObj1.beforeFirst();
+            Resultset_for_admin.beforeFirst();
             
             do{
                 System.out.println("Customer Press 1 \nAdmin Press 2");
-                int i;
-                i=input.nextInt();
-                switch(i){
+                int user_input;
+                user_input=input.nextInt();
+                switch(user_input){
                     case 1:{
                         System.out.println("Press 1 to print a ticket\nPress 2 to pay for parking");
-                        i=input.nextInt();
-                        switch(i){
+                        user_input=input.nextInt();
+                        switch(user_input){
                             case 1:{
                                 System.out.println("choose a num of an available spot");
-                                admin.print_totalSpots(tickets);
-                                customer.entry(ResObj2, tickets, ++id);
+                                admin.print_totalAvailableSpots(tickets);
+                                customer.entry(Resultset_for_customer, tickets, ++id_of_ticket);
                                 break;
                             }
                             
                             case 2:{
-                                customer.pay(ResObj2, tickets);
+                                customer.pay_theBill(Resultset_for_customer, tickets);
                                 break;
                             }
                             default:{
@@ -149,64 +154,73 @@ public class ParkingSystem {
                         break;
                     }
                     case 2:{
-                        int z;
                         System.out.print("enter your name : ");
-                        name=input.next();
+                        adminName=input.next();
                         System.out.print("enter your password : ");
-                        pass=input.next();
-                        if(admin.LogIn(ResObj1, name, pass)==true){
+                        adminPassword=input.next();
+                        boolean isAdminExist=false;
+                        while(Resultset_for_admin.next()){
+                            if(adminName.equals(Resultset_for_admin.getString(1)) && adminPassword.equals(Resultset_for_admin.getString(2))){
+                                isAdminExist=true;
+                                break;
+                            }
+                        }
+                        Resultset_for_admin.beforeFirst();
+                        if(admin.LogIn(Resultset_for_admin, adminName, adminPassword)==true){
                             System.out.println("\nEnter the number of operation you want");
-                            System.out.println("1-View total spots in parking\n2-Add ,update , delete users with different roles\n3-View shifts report with payment\n4-View parked cars report");
-                            i = input.nextInt();
-                            switch (i) {
+                            System.out.println("1-View total spots in parking\n2-Add ,update , delete users with different roles\n3-View shifts reports with payment\n4-View parked cars report");
+                            user_input = input.nextInt();
+                            switch (user_input) {
                                 case 1:{
-                                    admin.print_totalSpots(tickets);
+                                    admin.print_totalAvailableSpots(tickets);
                                     
                                     break;
                                 }
                                 case 2:{
                                     System.out.println("Enter the number of operation you want\n1-Add user\n2-Update User\n3-Delete user");
-                                    i=input.nextInt();
-                                    switch(i){
+                                    user_input=input.nextInt();
+                                    switch(user_input){
                                         case 1:{
                                             System.out.print("enter new name : ");
-                                            name = input.next();
+                                            adminName = input.next();
                                             System.out.print("enter new password : ");
-                                            pass = input.next();
+                                            adminPassword = input.next();
                                             
-                                            admin.addAdmin(ResObj1, admins, pass, name, ++e);
+                                            admin.addAdmin(Resultset_for_admin, admins, new admin(adminName, adminPassword), ++index_of_adminsArray);
                                             
-                                            ResObj1.beforeFirst();
+                                            Resultset_for_admin.beforeFirst();
+                                            
                                             break;
                                         }
                                         case 2:{
                                             System.out.print("enter new password : ");
-                                            pass=input.next();
+                                            adminPassword=input.next();
                                             
-                                            admin.updatepass(ResObj1, admins, pass, name);
+                                            admin.updateAdminPassword(Resultset_for_admin, admins, new admin(adminName, adminPassword));
                                             
-                                            ResObj1.beforeFirst();
+                                            Resultset_for_admin.beforeFirst();
                                             break;
                                         }
                                         case 3:{
                                             System.out.print("enter your name : ");
-                                            name = input.next();
+                                            adminName = input.next();
                                             
-                                            admin.deleteAdmin(ResObj1, name);
+                                            admin.deleteAdmin(Resultset_for_admin, adminName);
                                             
-                                            ResObj1.beforeFirst();
+                                            Resultset_for_admin.beforeFirst();
                                             break;
                                         }
                                     }
                                     break;
                                 }
                                 case 3:{
-                                    System.out.println("payment report: " + admin.Payment_Report(ResObj2));
+                                    System.out.println("payment report: " + admin.Payment_Report(Resultset_for_customer));
+                                    
                                     break;
                                 }
                                 case 4:{
-                                    admin.cars_report(tickets);
-                                   break;
+                                    admin.parkedCars_Report(tickets);
+                                    break;
                                }
                                 default:{
                                     break;
@@ -218,105 +232,106 @@ public class ParkingSystem {
                         }
                         break;
                    }
+
                    default:{
                         break;
                    }
                 }
                 
                 System.out.println("\nif you want another operation enter yes else enter no:");
-                choice=input.next();
-            }while(choice.equals("yes"));
+                choiceOfContinuityOfProgram=input.next();
+            }while(choiceOfContinuityOfProgram.equals("yes"));
             
 
-            ResObj2.close();
-            ResObj1.close();
+            Resultset_for_customer.close();
+            Resultset_for_admin.close();
         }
         catch(Exception e){
             System.out.println(e.getMessage());
         }
     }
-      static class customer {
-        private int Id;
-        private String PlateNum;
-        private int NumSpot;
-        private long phone;
-        private boolean a;
-        private long millis;
-        Date transactionDate;
+    static class customer {
+        private int id_of_ticket;
+        private String Plate_Number_of_car;
+        private int spot_number_in_parking;
+        private long phone_of_ticketOwner;
+        private boolean state_of_spot;
+        private long millisecond_when_enter;
+        private Date date_of__entry;
         customer(){
-            a = false;
+            state_of_spot = false;
         }
-        customer(int id, String platenumber, int numspot,long phone,Date transactionDate) {
-            this.Id = id;
-            this.PlateNum=platenumber;
-            this.NumSpot = numspot;
-            this.phone=phone;
-            this.transactionDate=transactionDate;
-            a = true;
+        customer(int id_of_ticket, String Plate_Number_of_car, int spot_number_in_parking,long phone_of_ticketOwner,Date transactionDate) {
+            this.id_of_ticket = id_of_ticket;
+            this.Plate_Number_of_car=Plate_Number_of_car;
+            this.spot_number_in_parking = spot_number_in_parking;
+            this.phone_of_ticketOwner=phone_of_ticketOwner;
+            this.date_of__entry=transactionDate;
+            state_of_spot = true;
         }
-        public int getId(){
-            return Id;
+        public int getId_of_ticket(){
+            return id_of_ticket;
         }
-        public String getPlateNum(){
-            return PlateNum;
+        public String getPlate_Number_of_car(){
+            return Plate_Number_of_car;
         }
-        public int getNumSpot(){
-            return NumSpot;
+        public int getSpot_number_in_parking(){
+            return spot_number_in_parking;
         }
-        public boolean isavailable(){
-            return a;
+        public boolean isSpotAvailable(){
+            return state_of_spot;
         }
-        public void doavailable(){
-            a=false;
+        public void doSpotAvailable(){
+            state_of_spot=false;
         }
-        public long getMillis(){
-            return millis;
+        public long getMillisecond_when_enter(){
+            return millisecond_when_enter;
         }
-        public void setId(int id){
-            this.Id=id;
+        public void setId_of_ticket(int id_of_ticket){
+            this.id_of_ticket=id_of_ticket;
         }
-        public void setPlateNum(String plateNum){
-            this.PlateNum=plateNum;
+        public void setPlate_Number_of_car(String Plate_Number_of_car){
+            this.Plate_Number_of_car=Plate_Number_of_car;
         }
-        public void setNumSpot(int numSpot){
-            this.NumSpot=numSpot;
+        public void setSpot_number_in_parking(int spot_number_in_parking){
+            this.spot_number_in_parking=spot_number_in_parking;
         }
-        public void setMillis(long millis){
-            this.millis=millis;
+        public void setMillisecond_when_enter(long millisecond_when_enter){
+            this.millisecond_when_enter=millisecond_when_enter;
         }
-        public Date getDate(){
-            return transactionDate;
+        public Date getDate_of_entry(){
+            return date_of__entry;
         }
-        public void setDate(Date date){
-            this.transactionDate=date;
+        public void setDate_of_entry(Date date_of__entry){
+            this.date_of__entry=date_of__entry;
         }
-        public long getPhone(){
-            return phone;
+        public long getPhone_of_ticketOwner(){
+            return phone_of_ticketOwner;
         }
-        public void setPhone(int phone){
-            this.phone=phone;
+        public void setPhone_of_ticketOwner(int phone_of_ticketOwner){
+            this.phone_of_ticketOwner=phone_of_ticketOwner;
         }
-        static void entry(ResultSet Resobj2, customer[] ticket,int newId){
+        static void entry(ResultSet Resultset_for_customer, customer[] ticket,int newId){
             try{
                 Scanner input = new Scanner(System.in);
                 System.out.println("\nIf you will stay more than one hour choose a spot from 20 to 30");
                 int user_input = input.nextInt();
-                if(ticket[user_input-1].isavailable() == false){
+                if(ticket[user_input-1].isSpotAvailable() == false){
                     System.out.println("Enter the plate Number of the car");
-                    ticket[user_input-1].setPlateNum(input.next());
+                    ticket[user_input-1].setPlate_Number_of_car(input.next());
                     System.out.println("Enter the phone Number");
-                    ticket[user_input-1].setPhone(input.nextInt());
-                    ticket[user_input-1].setMillis(System.currentTimeMillis());
-                    ticket[user_input - 1] = new customer(newId, ticket[user_input-1].getPlateNum(), user_input, ticket[user_input-1].getPhone(), new Date(ticket[user_input-1].getMillis()));
+                    ticket[user_input-1].setPhone_of_ticketOwner(input.nextInt());
+                    ticket[user_input-1].setMillisecond_when_enter(System.currentTimeMillis());
+                    ticket[user_input - 1] = new customer(newId, ticket[user_input-1].getPlate_Number_of_car(), user_input, ticket[user_input-1].getPhone_of_ticketOwner(), new Date(ticket[user_input-1].getMillisecond_when_enter()));
                     customer.print_ticket(ticket[user_input - 1]);
-                    Resobj2.moveToInsertRow();
-                    Resobj2.updateInt(1, newId);
-                    Resobj2.updateString(2, ticket[user_input-1].getPlateNum());
-                    Resobj2.updateInt(3, user_input);
-                    Resobj2.updateLong(9, ticket[user_input-1].getPhone());
-                    Resobj2.updateDate(4, ticket[user_input-1].getDate());
-                    Resobj2.updateLong(5, System.currentTimeMillis());
-                    Resobj2.insertRow();
+                    Resultset_for_customer.moveToInsertRow();
+                    Resultset_for_customer.updateInt(1, newId);
+                    Resultset_for_customer.updateString(2, ticket[user_input-1].getPlate_Number_of_car());
+                    Resultset_for_customer.updateInt(3, user_input);
+                    Resultset_for_customer.updateLong(9, ticket[user_input-1].getPhone_of_ticketOwner());
+                    Resultset_for_customer.updateDate(4, ticket[user_input-1].getDate_of_entry());
+                    Resultset_for_customer.updateLong(5, System.currentTimeMillis());
+                    Resultset_for_customer.insertRow();
                 }
                 else{
                     System.out.println("This spot is not available\n");
@@ -325,23 +340,21 @@ public class ParkingSystem {
             catch(Exception exception){
                 System.out.println(exception.getMessage());
             }
-            
-            
         }
-        static void pay(ResultSet Resultset_for_customer, customer[] ticket){
+        static void pay_theBill(ResultSet Resultset_for_customer, customer[] ticket){
             try{
                 Scanner input = new Scanner(System.in);
                 Resultset_for_customer.beforeFirst();
                 System.out.print("enter your spot:");
                 int customer_spot = input.nextInt();
-                if(ticket[customer_spot-1].isavailable()==true){
-                    ticket[customer_spot-1].doavailable();
+                if(ticket[customer_spot-1].isSpotAvailable()==true){
+                    ticket[customer_spot-1].doSpotAvailable();
                     while(Resultset_for_customer.next()){
                         if(Resultset_for_customer.getInt(3) == customer_spot && Resultset_for_customer.getBoolean(8) == false){
                             long millisecond_when_exit = System.currentTimeMillis();
                             Resultset_for_customer.updateBoolean(8, true);
                             Resultset_for_customer.updateLong(6, millisecond_when_exit);
-                            Resultset_for_customer.updateLong(7, Cost(millisecond_when_exit - Resultset_for_customer.getLong(5)));
+                            Resultset_for_customer.updateLong(7, calculateExitCost(millisecond_when_exit - Resultset_for_customer.getLong(5)));
                             Resultset_for_customer.updateRow();
                             System.out.println("cost: " + Resultset_for_customer.getLong(7) + " $");
                         }
@@ -359,85 +372,97 @@ public class ParkingSystem {
             }
         }
         private static void print_ticket(customer ticket) {
-            System.out.println("----------------------------");
-            System.out.println("             ticket");
-            System.out.println("The Id of the ticket is : " +ticket.getId());
-            System.out.println("The plate number of the car is : " +ticket.getPlateNum());
-            System.out.println("The spot number of the car is : " +ticket.getNumSpot());
-            System.out.println("The phone number is : " +ticket.getPhone());
-            System.out.println("Date is : " +ticket.getDate().toString());
+            System.out.println("\n----------------------------");
+            System.out.println("\t Ticket");
+            System.out.println("The Id of the ticket is : " + ticket.getId_of_ticket());
+            System.out.println("The plate number of the car is : " + ticket.getPlate_Number_of_car());
+            System.out.println("The spot number of the car is : " + ticket.getSpot_number_in_parking());
+            System.out.println("The phone number is : " + ticket.getPhone_of_ticketOwner());
+            System.out.println("Date is : " + ticket.getDate_of_entry().toString());
             System.out.println("----------------------------");
         }
     }
-        static class admin{
-            private String name;
-            private String pass;
+    static class admin{
+            private String adminName;
+            private String adminPassword;
             admin(){}
-            admin(String name,String pass){
-                this.name=name;
-                this.pass=pass;
+            admin(String adminName,String adminPassword){
+                this.adminName=adminName;
+                this.adminPassword=adminPassword;
             }
-            public String getName(){
-                return name;
+            public String getAdminName(){
+                return adminName;
             }
-            public void setName(String name){
-                this.name=name;
+            public void setAdminName(String adminName){
+                this.adminName=adminName;
             }
-            public String getPass(){
-                return pass;
+            public String getAdminPassword(){
+                return adminPassword;
             }
-            public void setPass(String pass){
-                this.pass=pass;
+            public void setAdminPassword(String adminPassword){
+                this.adminPassword=adminPassword;
             }
-            static boolean LogIn(ResultSet Resobj1, String name, String pass){
+            static boolean LogIn(ResultSet Resultset_for_admin, String adminName, String adminPassword){
                 try{
-                    while(Resobj1.next()){
-                        if(name.equals(Resobj1.getString(1)) && pass.equals(Resobj1.getString(2))){
-                            Resobj1.beforeFirst();
+                    while(Resultset_for_admin.next()){
+                        if(adminName.equals(Resultset_for_admin.getString(1)) && adminPassword.equals(Resultset_for_admin.getString(2))){
+                            Resultset_for_admin.beforeFirst();
                             return true;
                         }
                     }
 
-                    Resobj1.beforeFirst();
+                    Resultset_for_admin.beforeFirst();
                 }
                 catch(Exception exception){
                     System.out.println(exception.getMessage());
                 }
                 return false;
             }
-            static void print_totalSpots(customer[] spots){
-                for (int i = 0; i < spots.length; i++) {
-                    if (spots[i].isavailable() == false) {
-                        System.out.print((i+1) + "  ");
+            static void print_totalAvailableSpots(customer[] spots){
+                for (int index_of_ticketsArray = 0; index_of_ticketsArray < spots.length; index_of_ticketsArray++) {
+                    if (spots[index_of_ticketsArray].isSpotAvailable() == false) {//check if this spot is available
+                        System.out.print((index_of_ticketsArray+1) + "  ");
                     }
                 }
             }
-            static void addAdmin(ResultSet Resultset_for_admin, admin[] admins,String adminPassword, String adminName, int i){
+            static void addAdmin(ResultSet Resultset_for_admin, admin[] admins, admin newAdmin, int index_of_adminsArray){
                 try{
                     Resultset_for_admin.moveToInsertRow();
-                    Resultset_for_admin.updateString(1, adminName);
-                    Resultset_for_admin.updateString(2, adminPassword);
+                    Resultset_for_admin.updateString(1, newAdmin.getAdminName());
+                    Resultset_for_admin.updateString(2, newAdmin.getAdminPassword());
                     Resultset_for_admin.insertRow();
 
-                    admins[i].setName(adminName);
-                    admins[i].setPass(adminPassword);
+                    admins[index_of_adminsArray].setAdminName(newAdmin.getAdminName());
+                    admins[index_of_adminsArray].setAdminPassword(newAdmin.getAdminPassword());
                 }
                 catch(Exception exception){
                     System.out.println(exception.getMessage());
                 }
             }
-            static void updatepass(ResultSet Resobj1, admin[] admins,String password, String name){
-                try{
-                    for(int i = 0; admins[i].getPass() != null; i++){
-                        if(admins[i].getName().equals(name)){
-                            admins[i].setPass(password);
-                        }                                         
+            static void updateAdminPassword(ResultSet Resultset_for_admin, admin[] admins, admin newAdmin){
+            try{
+                for(int index_of_adminsArray = 0; admins[index_of_adminsArray].getAdminPassword() != null; index_of_adminsArray++){
+                    if(admins[index_of_adminsArray].getAdminName().equals(newAdmin.getAdminName())){
+                        admins[index_of_adminsArray].setAdminPassword(newAdmin.getAdminPassword());
+                    }                                         
+                }
+                                            
+                while(Resultset_for_admin.next()){
+                    if(newAdmin.getAdminName().equals(Resultset_for_admin.getString(1))){
+                        Resultset_for_admin.updateString(2, newAdmin.getAdminPassword());
+                        Resultset_for_admin.updateRow();
                     }
-
-                    while(Resobj1.next()){
-                        if(name.equals(Resobj1.getString(1))){
-                            Resobj1.updateString(2, password);
-                            Resobj1.updateRow();
+                }
+            }
+            catch(Exception exception){
+                System.out.println(exception.getMessage());
+            }
+        }
+            static void deleteAdmin(ResultSet Resultset_for_admin, String adminName){
+                try{
+                    while(Resultset_for_admin.next()){
+                        if(adminName.equals(Resultset_for_admin.getString(1))){
+                            Resultset_for_admin.deleteRow();
                         }
                     }
                 }
@@ -445,26 +470,14 @@ public class ParkingSystem {
                     System.out.println(exception.getMessage());
                 }
             }
-            static void deleteAdmin(ResultSet Resobj1, String name){
-                try{
-                    while(Resobj1.next()){
-                        if(name.equals(Resobj1.getString(1))){
-                            Resobj1.deleteRow();
-                        }
-                    }
-                }
-                catch(Exception exception){
-                    System.out.println(exception.getMessage());
-                }
-            }
-            static int Payment_Report(ResultSet Resobj2){
+            static int Payment_Report(ResultSet Resultset_for_customer){
                 int totalCost=0;
                 try{
-                    Resobj2.beforeFirst();
+                    Resultset_for_customer.beforeFirst();
 
-                    while(Resobj2.next()){
-                        if(Resobj2.getBoolean(8)==true){
-                            totalCost+=Resobj2.getInt(7);
+                    while(Resultset_for_customer.next()){
+                        if(Resultset_for_customer.getBoolean(8)==true){
+                            totalCost+=Resultset_for_customer.getInt(7);
                         }
                     }
                 }
@@ -473,16 +486,16 @@ public class ParkingSystem {
                 }
                 return totalCost;
             }
-            static void cars_report(customer[] ticket){
-            System.out.println("----------------------------");
-            System.out.println("id\tplate_num\tspot_num\tphone_num\tdate_of_entry\n");
-            for (int i=0;i<ticket.length;i++) {
-                if (ticket[i].isavailable()==true) {
-                    System.out.println(ticket[i].getId()+"\t"+ticket[i].getPlateNum()+"\t\t"+ticket[i].getNumSpot()+"\t\t"+ticket[i].getPhone()+"\t\t"+ticket[i].getDate());
+            static void parkedCars_Report(customer[] ticket){
+                System.out.println("----------------------------");
+                System.out.println("id\tplate_num\tspot_num\tphone_num\tdate_of_entry\n");
+                for (int index_of_ticketsArray=0;index_of_ticketsArray<ticket.length;index_of_ticketsArray++) {
+                    if (ticket[index_of_ticketsArray].isSpotAvailable()==true) {
+                        System.out.println(ticket[index_of_ticketsArray].getId_of_ticket()+"\t"+ticket[index_of_ticketsArray].getPlate_Number_of_car()+"\t\t"+ticket[index_of_ticketsArray].getSpot_number_in_parking()
+                                          +"\t\t"+ticket[index_of_ticketsArray].getPhone_of_ticketOwner()+"\t\t"+ticket[index_of_ticketsArray].getDate_of_entry());
+                    }
                 }
+                System.out.println("----------------------------");
             }
-            System.out.println("----------------------------");
         }
-        }
-    
 }
